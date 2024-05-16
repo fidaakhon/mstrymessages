@@ -10,7 +10,7 @@ const openai = new OpenAI({
 
 export const runtime = "edge";
 
-export async function post(req: Request) {
+export async function POST(req: Request) {
   try {
 
     const prompt = "create a list of three open-ended and engaging questions formated as a single string. Each question should be separated by a '||'.These questions are for an anonymous social messaging plateform, like Qooh.me, and should be suitable for a diverse audience. Avoid personal or sensitive topics, focusing instead on universal themes that encourage friendly interaction. For example, your output should be structured like this: 'What is your favorite book?||What is your favorite movie?||What is your favorite food?'. Ensure the questions are intriguing, fosters curiosity, and contribute to a positive and welcoming conversational environment.";

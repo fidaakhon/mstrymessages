@@ -1,20 +1,94 @@
 "use client";
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import axios, { AxiosError } from "axios";
+import { ApiResponse } from "@/types/ApiResponse";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { signInSchema } from "@/schemas/signInSchema";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
 
-export default function Component() {
-  const { data: session } = useSession()
-  if (session) {
-    return (
-      <>
-        Signed in as {session.user.email} <br />
-        <button onClick={() => signOut()}>Sign out</button>
-      </>
-    )
+export default function Page() {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
+  })
+
+  const onSubmit = async (data: z.infer<typeof signInSchema>) => {
+    const result = await signIn("credentials", {
+      redirect: false,
+      identifier: data.identifier,
+      password: data.password,
+    });
+
+    if (result?.error) {
+      toast({
+        title: "Login failed",
+        description: "Invalid email or password",
+        variant: "destructive",
+      });
+    }
+
+    if (result?.url) {
+      router.replace("/dashboard");
+    }
+
   }
+
+
   return (
-    <>
-      Not signed in <br />
-      <button className="bg-orange-500 rounded py-2 px-4 m-4" onClick={() => signIn()}>Sign in</button>
-    </>
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-6">Sign In</h1>
+          <p className="mb-4">Sign in your account</p>
+        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="identifier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input placeholder="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="mt-4" >Sign in
+            </Button>
+          </form>
+        </Form>
+        <div className="text-center mt-4">
+          <p>
+            Not a member? {' '}
+            <Link href="/sign-up" className="text-blu-600 hover:text-blue-800">Sing up</Link>
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
